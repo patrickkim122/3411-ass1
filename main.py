@@ -18,7 +18,6 @@ def parse_grid(grid):
     islands = []
     for y, row in enumerate(map):
         for x, cell in enumerate(row):
-            print(f" x = {x}, y = {y}, num = {cell}")
             if cell > 0: # Cell is not an empty body of water ie an Island
                 islands.append(Island(x, y, cell))
     return islands

@@ -1,4 +1,3 @@
-
 # Island Class
 # x : x-coordinate
 # y : y-coordinate

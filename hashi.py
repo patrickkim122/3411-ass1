@@ -57,6 +57,7 @@ def solve(grid, islands, bridges=[]):
     :param bridges: List of Bridge objects representing current connections.
     :return: True if a solution is found, False otherwise.
     """
+    print(f"there are {len(islands)} islands left in the array")
     if not islands:
         return True  # All islands processed
 
@@ -68,18 +69,18 @@ def solve(grid, islands, bridges=[]):
             if end_island.is_fully_connected():
                 print(f"End Island is Full {end_island.x} {end_island.y}")
                 continue
-            for bridge_count in range(0, 4):  # Try 1, 2, and 3 bridges
-                if is_valid_connection(grid, start_island, end_island, bridge_count):
+            for bridge_count in range(1, 4):  # Try 1, 2, and 3 bridges
+                if is_valid_connection(grid, start_island, end_island, bridge_count) and start_island.remaining_capacity() >= bridge_count and end_island.remaining_capacity >= bridge_count:
                     start_island.add_connection(end_island, bridge_count)
                     new_bridge = Bridge(start_island, end_island, bridge_count)
                     bridges.append(new_bridge)
-                    print(f"Island {start_island.x} {start_island.y} is not full. {bridge_count} bridges are being added. Now Island {start_island.x} {start_island.y} has {start_island.remaining_capacity()} capacity left")
+                    print(f"{bridge_count} bridges are being connected from Island {start_island.x} {start_island.y} to Island {end_island.x} {end_island.y}. Now Island {start_island.x} {start_island.y} has {start_island.remaining_capacity()} capacity left and Island {end_island.x} {end_island.y} has {end_island.remaining_capacity()} capacity left")
                     if solve(grid, islands[i+1:], bridges):
                         print("reached True case")
                         return True
                     # Backtrack
                     bridges.remove(new_bridge)
-                    print(f"Backtracking. {new_bridge.bridges_between} bridges are removed from Island {start_island.x} {start_island.y}")
+                    print(f"Backtracking. {new_bridge.bridges_between} bridges are removed from Island {start_island.x} {start_island.y} and Island {end_island.x} {end_island.y}")
                     start_island.connections.remove((end_island, bridge_count))
                     end_island.connections.remove((start_island, bridge_count))
     return False

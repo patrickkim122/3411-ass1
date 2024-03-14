@@ -62,22 +62,24 @@ def solve(grid, islands, bridges=[]):
 
     for i, start_island in enumerate(islands):
         if start_island.is_fully_connected():
-            print(f"Island is Full {start_island.x} {start_island.y}")
+            print(f"Start Island is Full {start_island.x} {start_island.y}")
             continue
         for end_island in islands[i+1:]:
             if end_island.is_fully_connected():
-                print("last island full")
+                print(f"End Island is Full {end_island.x} {end_island.y}")
                 continue
             for bridge_count in range(0, 4):  # Try 1, 2, and 3 bridges
                 if is_valid_connection(grid, start_island, end_island, bridge_count):
                     start_island.add_connection(end_island, bridge_count)
                     new_bridge = Bridge(start_island, end_island, bridge_count)
                     bridges.append(new_bridge)
+                    print(f"Island {start_island.x} {start_island.y} is not full. {bridge_count} bridges are being added. Now Island {start_island.x} {start_island.y} has {start_island.remaining_capacity()} capacity left")
                     if solve(grid, islands[i+1:], bridges):
                         print("reached True case")
                         return True
                     # Backtrack
                     bridges.remove(new_bridge)
+                    print(f"Backtracking. {new_bridge.bridges_between} bridges are removed from Island {start_island.x} {start_island.y}")
                     start_island.connections.remove((end_island, bridge_count))
                     end_island.connections.remove((start_island, bridge_count))
     return False

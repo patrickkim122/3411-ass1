@@ -22,3 +22,9 @@ class Island:
         for island, bridges_between in self.connections:
             total_bridges += bridges_between
         return total_bridges == self.num_bridges
+
+    def remaining_capacity(self):
+        total_bridges = 0
+        for island, bridges_between in self.connections:
+            total_bridges += bridges_between
+        return self.num_bridges - total_bridges

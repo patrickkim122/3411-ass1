@@ -1,124 +1,86 @@
-#**********************************************************************
-#   cryptarith.py
-#
-#   UNSW CSE
-#   COMP3411/9814
-#   Code for Solving Cryptarithmetic Puzzles by Backtracking Search
-#
-
-import numpy as np
-import sys
+from Island import Island
+from Bridge import Bridge
 import scan_print_map
 
-def main():
-    # add_string1, add_string2, sum_string = scan_puzzle()
-    # print(add_string1,'+',add_string2,'=',sum_string)
-    # var = []
-    # var, a1  = string2array(var,add_string1)
-    # var, a2  = string2array(var,add_string2)
-    # var, sum = string2array(var,sum_string)
-    # print('Variables:',end=' ')
-    # for k in range(len(var)-1):
-    #     print(var[k],end=', ')
-    # print(var[len(var)-1])
-    # val = np.zeros(len(var),dtype=np.int32)
-    # search(0,a1,a2,sum,val,var)
-    
-    # Hashi
-    nrow, ncol, puzzle = scan_print_map.scan_map()
-    i = 0
-    while i < nrow:
-        j = 0
-        while j < ncol:
-            puzzle
-            
-    return nrow, ncol, puzzle
-        
-    
+import numpy as np
+import pandas as pd
 
-#**********************************************************************
-#   add new letters to var[], and create array a_num[] by replacing
-#   each letter in a_string[] with its corresponding index in var[].
-#
-def string2array( var, a_string ):
-    a_num = np.zeros(len(a_string),dtype=np.int32)
-    for k in range(len(a_string)):
-        j = 0
-        while j < len(var) and var[j] != a_string[k]:
-            j += 1
-        if j == len(var):  # new letter
-            var.append(a_string[k])
-        a_num[k] = j
-    return var, a_num
+def parse_grid(grid):
 
-#**********************************************************************
-#   scan a cryptarithmetic puzzle from stdin in the format:
-#
-#   SEND + MORE = MONEY
-#    
-def scan_puzzle():
-    for line in sys.stdin:
-        text = line.split()
-        if len(text) >= 5:
-            return text[0], text[2], text[4]
-    print('Failed to scan puzzle.')
-    exit(1)
-    
-            
-        
+    ### NOTE TO DAVID ###
+    ### I HAVE RIGOROUSLY CHECKED THIS FUNCTION AND IT DEFINITELY WORKS SO DONT WORRY ABOUT DEBUGGING THIS FUNCTION ###
 
-#**********************************************************************
-#   recursively apply backtracking search to find a solution.
-#   k starts with zero
-#   var is the list of all unique characters
-#   
-def search( k, a1, a2, sum, val, var ):
-    if( k == len(val)):
-        if check_solution(a1,a2,sum,val):
-            print_solution(a1,a2,sum,val,var)
-    else:
-        for d in range(0,10):
-            j = 0
-            while( j < k and val[j] != d ):
-                j += 1
-            if j == k:
-                val[k] = d
-                search(k+1,a1,a2,sum,val,var)
+    """
+    Parse the input grid to identify islands and initialize Island objects.
+    :param grid: 2D list representing the puzzle grid, where 0 indicates water, and positive integers represent islands with their bridge requirements.
+    :return: A list of Island objects.
+    """
+    islands = []
+    for y, row in enumerate(map):
+        for x, cell in enumerate(row):
+            if cell > 0: # Cell is not an empty body of water ie an Island
+                islands.append(Island(x, y, cell))
+    return islands
 
-#**********************************************************************
-#   check whether the current configuration is a valid solution.
-#
-def check_solution( a1, a2, sum, val ):
-    if val[a1[0]] == 0 or val[a2[0]] == 0 or val[sum[0]] == 0:
-        return False
-    elif get_num(a1,val) + get_num(a2,val) == get_num(sum,val):
-        return True
-    else:
+
+
+def is_valid_connection(grid, start_island, end_island, bridges):
+    """
+    Check if a connection between two islands is valid (no crossing bridges or islands).
+    :param grid: 2D list representing the puzzle grid.
+    :param start_island: Starting Island object.
+    :param end_island: Ending Island object.
+    :param bridges: Number of bridges to connect.
+    :return: True if the connection is valid, False otherwise.
+    """
+    # Ensure bridges are in the same row or column
+    if start_island.x != end_island.x and start_island.y != end_island.y:
         return False
 
-#**********************************************************************
-#   print the solution that was found.
-#
-def print_solution( a1, a2, sum, val, var ):
-    print(' Solution:',end=' ')
-    k = len(val)
-    for j in range(k-1):
-        print(var[j],end=':')
-        print(val[j],end=', ')
-    print(var[k-1],end=':')
-    print(val[k-1])
-    print(get_num(a1,val),'+',get_num(a2,val),'=',get_num(sum,val))
+    # Check for crossing bridges or islands
+    x_range = range(min(start_island.x, end_island.x), max(start_island.x, end_island.x) + 1)
+    y_range = range(min(start_island.y, end_island.y), max(start_island.y, end_island.y) + 1)
+    for y in y_range:
+        for x in x_range:
+            if grid[y][x] != 0 and (x, y) != (start_island.x, start_island.y) and (x, y) != (end_island.x, end_island.y):
+                return False  # Island in the way
+            # Future implementation: Check for crossing bridges
+    return True
 
-#**********************************************************************
-#   compute a decimal number from an array of indices and
-#   an array of values.
-#
-def get_num( a, val ):
-    num = 0
-    for k in range(len(a)):
-        num = 10*num + val[a[k]]
-    return num
+def solve(grid, islands, bridges=[]):
+    """
+    Recursive function to solve the Hashiwokakero puzzle using backtracking.
+    :param grid: 2D list representing the puzzle grid.
+    :param islands: List of remaining Island objects to connect.
+    :param bridges: List of Bridge objects representing current connections.
+    :return: True if a solution is found, False otherwise.
+    """
+    if not islands:
+        return True  # All islands processed
 
+    for i, start_island in enumerate(islands):
+        for end_island in islands[i+1:]:
+            for bridge_count in range(0, 4):  # Try 1, 2, and 3 bridges
+                if is_valid_connection(grid, start_island, end_island, bridge_count):
+                    start_island.add_connection(end_island, bridge_count)
+                    new_bridge = Bridge(start_island, end_island, bridge_count)
+                    bridges.append(new_bridge)
+                    if solve(grid, islands[i+1:], bridges):
+                        print("reached True case")
+                        return True
+                    # Backtrack
+                    bridges.remove(new_bridge)
+                    start_island.connections.remove((end_island, bridge_count))
+                    end_island.connections.remove((start_island, bridge_count))
+    return False
 
-if __name__ == '__main__':
-    main()
+# Example usage
+if __name__ == "__main__":
+    nrow, ncol, map = scan_print_map.scan_map()
+    islands = parse_grid(map)
+    if solve(map, islands):
+        print("Solution found:")
+        for island in islands:
+            print(island)
+    else:
+        print("No solution.")

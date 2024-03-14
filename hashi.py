@@ -18,8 +18,8 @@ def parse_grid(grid):
     islands = []
     for y, row in enumerate(map):
         for x, cell in enumerate(row):
-            # code = ".123456789abc"
-            # print(code[map[x][y]],end="\n")
+            code = ".123456789abc"
+            print(code[map[x][y]],end="")
             if cell > 0: # Cell is not an empty body of water ie an Island
                 islands.append(Island(x, y, cell))
     return islands
@@ -58,8 +58,8 @@ def solve(grid, islands, bridges=[]):
     :return: True if a solution is found, False otherwise.
     """
     print(f"there are {len(islands)} islands left in the array")
-    if not islands:
-        return True  # All islands processed
+    if all(island.is_fully_connected() for island in islands):
+        return True  # All islands are fully connected
 
     for i, start_island in enumerate(islands):
         if start_island.is_fully_connected():
@@ -70,7 +70,7 @@ def solve(grid, islands, bridges=[]):
                 print(f"End Island is Full {end_island.x} {end_island.y}")
                 continue
             for bridge_count in range(1, 4):  # Try 1, 2, and 3 bridges
-                if is_valid_connection(grid, start_island, end_island, bridge_count) and start_island.remaining_capacity() >= bridge_count and end_island.remaining_capacity >= bridge_count:
+                if is_valid_connection(grid, start_island, end_island, bridge_count) and start_island.remaining_capacity() >= bridge_count and end_island.remaining_capacity() >= bridge_count:
                     start_island.add_connection(end_island, bridge_count)
                     new_bridge = Bridge(start_island, end_island, bridge_count)
                     bridges.append(new_bridge)
@@ -84,6 +84,7 @@ def solve(grid, islands, bridges=[]):
                     start_island.connections.remove((end_island, bridge_count))
                     end_island.connections.remove((start_island, bridge_count))
     return False
+
 
 # Example usage
 if __name__ == "__main__":

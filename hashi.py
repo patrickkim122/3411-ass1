@@ -18,6 +18,8 @@ def parse_grid(grid):
     islands = []
     for y, row in enumerate(map):
         for x, cell in enumerate(row):
+            # code = ".123456789abc"
+            # print(code[map[x][y]],end="\n")
             if cell > 0: # Cell is not an empty body of water ie an Island
                 islands.append(Island(x, y, cell))
     return islands
@@ -59,7 +61,13 @@ def solve(grid, islands, bridges=[]):
         return True  # All islands processed
 
     for i, start_island in enumerate(islands):
+        if start_island.is_fully_connected():
+            print(f"Island is Full {start_island.x} {start_island.y}")
+            continue
         for end_island in islands[i+1:]:
+            if end_island.is_fully_connected():
+                print("last island full")
+                continue
             for bridge_count in range(0, 4):  # Try 1, 2, and 3 bridges
                 if is_valid_connection(grid, start_island, end_island, bridge_count):
                     start_island.add_connection(end_island, bridge_count)
@@ -83,4 +91,4 @@ if __name__ == "__main__":
         for island in islands:
             print(island)
     else:
-        print("No solution.")
+        print("No solution")

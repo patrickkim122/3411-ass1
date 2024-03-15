@@ -1,39 +1,40 @@
+"""
+COMP3411 Term 1 2024 Assignment 1
+"""
 from Island import Island
 from Bridge import Bridge
 import scan_print_map
 
-import numpy as np
-import pandas as pd
-
 def parse_grid(grid):
-
-    ### NOTE TO DAVID ###
-    ### I HAVE RIGOROUSLY CHECKED THIS FUNCTION AND IT DEFINITELY WORKS SO DONT WORRY ABOUT DEBUGGING THIS FUNCTION ###
-
     """
     Parse the input grid to identify islands and initialize Island objects.
-    :param grid: 2D list representing the puzzle grid, where 0 indicates water, and positive integers represent islands with their bridge requirements.
-    :return: A list of Island objects.
+
+    Args:
+    - grid (list): 2D list representing the puzzle grid, where 0 indicates water, and positive integers represent islands with their bridge requirements.
+
+    Returns:
+    - list: A list of Island objects.
     """
     islands = []
-    for y, row in enumerate(map):
+    for y, row in enumerate(grid):
         for x, cell in enumerate(row):
-            # code = ".123456789abc"
-            # print(code[map[x][y]],end="\n")
-            if cell > 0: # Cell is not an empty body of water ie an Island
+            if cell > 0: # Cell is not an empty body of water, i.e., an Island
                 islands.append(Island(x, y, cell))
     return islands
-
-
 
 def is_valid_connection(grid, start_island, end_island, new_bridge, bridges):
     """
     Check if a connection between two islands is valid (no crossing bridges or islands).
-    :param grid: 2D list representing the puzzle grid.
-    :param start_island: Starting Island object.
-    :param end_island: Ending Island object.
-    :param bridges: Number of bridges to connect.
-    :return: True if the connection is valid, False otherwise.
+
+    Args:
+    - grid (list): 2D list representing the puzzle grid.
+    - start_island (Island): Starting Island object.
+    - end_island (Island): Ending Island object.
+    - new_bridge (Bridge): Bridge object representing the potential new connection.
+    - bridges (list): List of Bridge objects representing current connections.
+
+    Returns:
+    - bool: True if the connection is valid, False otherwise.
     """
     if start_island.x == end_island.x and start_island.y == end_island.y:
         return False
@@ -48,7 +49,6 @@ def is_valid_connection(grid, start_island, end_island, new_bridge, bridges):
         for x in x_range:
             if grid[y][x] != 0 and (x, y) != (start_island.x, start_island.y) and (x, y) != (end_island.x, end_island.y):
                 return False  # Island in the way
-    #         # Future implementation: Check for crossing bridges
     
     for bridge in bridges:
         if bridge.start_island == start_island and bridge.end_island == end_island:
@@ -63,16 +63,16 @@ def is_valid_connection(grid, start_island, end_island, new_bridge, bridges):
 def solve(grid, islands, bridges, original_islands=[]):
     """
     Recursive function to solve the Hashiwokakero puzzle using backtracking.
-    :param grid: 2D list representing the puzzle grid.
-    :param islands: List of remaining Island objects to connect.
-    :param bridges: List of Bridge objects representing current connections.
-    :return: True if a solution is found, False otherwise.
+
+    Args:
+    - grid (list): 2D list representing the puzzle grid.
+    - islands (list): List of remaining Island objects to connect.
+    - bridges (list): List of Bridge objects representing current connections.
+    - original_islands (list): List of original Island objects.
+
+    Returns:
+    - bool: True if a solution is found, False otherwise.
     """
-    # island_bruh = []
-    # for island in islands:
-    #     island_bruh.append([island.x, island.y])
-    # print(f"Islands array: {island_bruh}")
-    
     if all(island.is_fully_connected() for island in original_islands):
         return True  # All islands processed
     
@@ -81,40 +81,45 @@ def solve(grid, islands, bridges, original_islands=[]):
 
     for i, start_island in enumerate(islands):
         if start_island.is_fully_connected():
-            # print(f"Start Island is Full {start_island.x} {start_island.y}")
             continue
         for end_island in islands:
             if start_island != end_island and end_island.is_fully_connected():
-                # print(f"End Island is Full {end_island.x} {end_island.y}")
                 continue
             for bridge_count in range(0, 4):  # Try 1, 2, and 3 bridges
                 new_bridge = Bridge(start_island, end_island, bridge_count)
                 if is_valid_connection(grid, start_island, end_island, new_bridge, bridges) and start_island.remaining_capacity() >= bridge_count and end_island.remaining_capacity() >= bridge_count:
                     start_island.add_connection(end_island, bridge_count)
                     bridges.append(new_bridge)
-                    # print(f"{bridge_count} bridges are being connected from Island {start_island.x} {start_island.y} to Island {end_island.x} {end_island.y}. Now Island {start_island.x} {start_island.y} has {start_island.remaining_capacity()} capacity left and Island {end_island.x} {end_island.y} has {end_island.remaining_capacity()} capacity left")
                     if solve(grid, islands, bridges, original_islands=original_islands):
-                        # print("reached True case")
                         return True
+
                     # Backtrack
                     bridges.remove(new_bridge)
-                    # print(f"Backtracking. {new_bridge.bridges_between} bridges are removed from Island {start_island.x} {start_island.y} and Island {end_island.x} {end_island.y}")
                     start_island.connections.remove((end_island, bridge_count))
                     start_island.cur_bridges -= bridge_count
                     end_island.connections.remove((start_island, bridge_count))
                     end_island.cur_bridges -= bridge_count
     return False
 
-def print_solution(nrow, ncol, map, islands, bridges):
+def print_solution(nrow, ncol, grid, islands, bridges):
+    """
+    Print the solution to the Hashiwokakero puzzle.
+
+    Args:
+    - nrow (int): Number of rows in the puzzle grid.
+    - ncol (int): Number of columns in the puzzle grid.
+    - grid (list): 2D list representing the puzzle grid.
+    - islands (list): List of Island objects.
+    - bridges (list): List of Bridge objects representing connections.
+    """
     code = ".123456789abc"
     for row in range(nrow):
         for col in range(ncol):
-            if code[map[row][col]] != '.':
-                print(code[map[row][col]], end="")
+            if code[grid[row][col]] != '.':
+                print(code[grid[row][col]], end="")
             else:
                 is_bridge = False
                 for bridge in bridges:
-                    # print(f"Row = {row}, Col = {col}, Tiles = {bridge.getTiles()}")
                     if [col, row] in bridge.getTiles():
                         print(bridge.getType(), end="")
                         is_bridge = True
@@ -123,20 +128,12 @@ def print_solution(nrow, ncol, map, islands, bridges):
                     print(" ", end="")
         print()
                 
-                   
-
-
 # Example usage
 if __name__ == "__main__":
-    nrow, ncol, map = scan_print_map.scan_map()
-    islands = parse_grid(map)
+    nrow, ncol, grid = scan_print_map.scan_map()
+    islands = parse_grid(grid)
     bridges = []
-    if solve(map, islands, bridges, original_islands=islands):
-        # print("Solution found:")
-        # for island in islands:
-        #     print(f"{island.x} {island.y} {island.connections}")
-        # for bridge in bridges:
-        #     print(bridge.bridges_between)
-        print_solution(nrow, ncol, map, islands, bridges)
+    if solve(grid, islands, bridges, original_islands=islands):
+        print_solution(nrow, ncol, grid, islands, bridges)
     else:
         print("No solution")

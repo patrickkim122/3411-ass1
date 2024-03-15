@@ -13,6 +13,8 @@ class Bridge:
 
     def getTiles(self):
         tiles = []
+        # tiles.append([self.start_island.x, self.start_island.y])
+        # tiles.append([self.end_island.x, self.end_island.y])
         i = 0
         if self.start_island.x - self.end_island.x < 0:
             while self.start_island.x + i < self.end_island.x:
@@ -31,4 +33,24 @@ class Bridge:
                 tiles.append([self.start_island.x, self.start_island.y - 1])
                 i += 1
         return tiles
+    
+    def getType(self):
+        if self.bridges_between == 0:
+            return ' '
+        elif self.start_island.x != self.end_island.x: # Horizontal Bridge
+            if self.bridges_between == 1:
+                return '-'
+            elif self.bridges_between == 2:
+                return '='
+            else:
+                return 'E'
+        else:
+            if self.bridges_between == 1:
+                return '|'
+            elif self.bridges_between == 2:
+                return '\"'
+            else:
+                return '#'
+            
+            
     
